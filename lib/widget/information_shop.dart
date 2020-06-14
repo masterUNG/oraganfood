@@ -2,8 +2,10 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:oraganfood/model/user_model.dart';
 import 'package:oraganfood/screens/add_info_shop.dart';
+import 'package:oraganfood/screens/edit_info_shop.dart';
 import 'package:oraganfood/utility/my_constant.dart';
 import 'package:oraganfood/utility/my_style.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -43,9 +45,11 @@ class _InformationShopState extends State<InformationShop> {
   }
 
   void routeToAddInfo() {
-    print('routeToAddInfo Work!');
+    
+    
+    Widget widget = userModel.nameShop.isEmpty ? AddInfoShop() : EditInfoShop();
     MaterialPageRoute materialPageRoute = MaterialPageRoute(
-      builder: (context) => AddInfoShop(),
+      builder: (context) => widget,
     );
     Navigator.push(context, materialPageRoute);
   }
@@ -65,31 +69,100 @@ class _InformationShopState extends State<InformationShop> {
 
   Widget showContent() => Column(
         children: <Widget>[
-          Text(
-            userModel.nameShop,
-            style: TextStyle(
-              fontSize: 24.0,
-              color: Colors.orange.shade800,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          //   Text(
+          //     userModel.nameShop,
+          //     style: TextStyle(
+          //       fontSize: 24.0,
+          //       color: Colors.green.shade800,
+          //       fontWeight: FontWeight.bold,
+          //     ),
+          //   ),
+          //   Row(
+          //     mainAxisAlignment: MainAxisAlignment.center,
+          //     children: <Widget>[
+          //       Container(
+          //         child: Image.network(
+          //           '${MyConstant().domain}${userModel.urlPicture}',
+          //           fit: BoxFit.contain,
+          //         ),
+          //         height: 300.0,
+          //         width: 300.0,
+          //       ),
+          //     ],
+          //   ),
+          //   Text('ที่อยู่่ : ${userModel.address}'),
+          //   Text('โทรศัพท์ : ${userModel.phone}'),
+          MyStyle().mySizebox(),
+          MyStyle().showTitleH2('ข้อมูลร้าน : ${userModel.nameShop}'),
+          MyStyle().mySizebox(),
+          showImage(),
+          MyStyle().mySizebox(),
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Container(
-                child: Image.network(
-                  '${MyConstant().domain}${userModel.urlPicture}',
-                  fit: BoxFit.contain,
-                ),
-                height: 300.0,
-                width: 300.0,
-              ),
+              MyStyle().showTitleH2('ที่อยู่ :'),
             ],
           ),
-          Text('ที่อยู่่ : ${userModel.address}'),
-          Text('โทรศัพท์ : ${userModel.phone}'),
+          Row(
+            children: <Widget>[
+              Text(userModel.address),
+            ],
+          ),
+         
+          Row(
+            children: <Widget>[
+              MyStyle().showTitleH2('โทรศัพท์ :'),
+            ],
+          ),
+          Row(
+            children: <Widget>[
+              Text(userModel.phone),
+            ],
+          ),
+          MyStyle().mySizebox(),
+          showMap(),
         ],
       );
+
+  Container showImage() {
+    return Container(width: 200.0,height: 200.0,
+          child: Image.network('${MyConstant().domain}${userModel.urlPicture}'),
+        );
+  }
+
+  Set<Marker> shopMarker() {
+    return <Marker>[
+      Marker(
+        markerId: MarkerId('shopID'),
+        position: LatLng(
+          double.parse(userModel.lat),
+          double.parse(userModel.lng),
+        ),
+        infoWindow: InfoWindow(
+            title: 'ตำแหน่งร้าน',
+            snippet:
+                'ละติจูด = ${userModel.lat},  ลองติจูด = ${userModel.lng}'),
+      )
+    ].toSet();
+  }
+
+  Widget showMap() {
+    double lat = double.parse(userModel.lat);
+    double lng = double.parse(userModel.lng);
+
+    LatLng latLng = LatLng(lat, lng);
+    CameraPosition position = CameraPosition(target: latLng, zoom: 16.0);
+
+    return Expanded(
+      //padding: EdgeInsets.all(10.0),
+      //height: 300.0,
+      child: GoogleMap(
+        initialCameraPosition: position,
+        mapType: MapType.normal,
+        onMapCreated: (controller) {},
+        markers: shopMarker(),
+      ),
+    );
+  }
 
   Widget showNoData(BuildContext context) {
     return MyStyle().titleCenter('กรุณาเพิ่มข้อมูล', context);
